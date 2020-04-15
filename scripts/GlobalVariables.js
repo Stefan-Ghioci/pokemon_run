@@ -1,3 +1,10 @@
-var global = {
+var state = {
   scenes: [],
+  characters: [],
+  selectedCharacter: -1,
+};
+
+var constants = {
+  frameSize: { frameWidth: 48, frameHeight: 48 },
+  backgroundColor: 0x0061a4,
 };

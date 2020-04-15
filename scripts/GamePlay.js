@@ -10,9 +10,10 @@ var gamePlayState = new Phaser.Class({
 
   create: function () {
     console.log('GamePlay');
+    this.add.image(320, 240, 'world_background');
   },
 
   update: function () {},
 });
 
-global.scenes.push(gamePlayState);
+state.scenes.push(gamePlayState);
