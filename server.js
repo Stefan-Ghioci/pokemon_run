@@ -26,6 +26,17 @@ io.on('connection', function (socket) {
       eeveeLFG.push(socket.id);
       console.log(eeveeLFG.length + ' Eevee looking for Pikachu');
     }
+
+    if (eeveeLFG.length > 0 && pikachuLFG.length > 0) {
+      console.log('Match found');
+      var eeveeID = eeveeLFG.shift();
+      var pikachuID = pikachuLFG.shift();
+
+      var gameID = eeveeID + pikachuID;
+      games[gameID] = { eeveeID, pikachuID, pikachuScore: 0, eeveeScore: 0 };
+      io.to(eeveeID).emit('game found', null);
+      io.to(pikachuID).emit('game found', null);
+    }
   });
 
   socket.on('disconnect', function () {
@@ -36,16 +47,16 @@ io.on('connection', function (socket) {
 });
 
 function clearLFG(playerID) {
-    removeElement(eeveeLFG, playerID);
-    removeElement(pikachuLFG, playerID);
+  removeElement(eeveeLFG, playerID);
+  removeElement(pikachuLFG, playerID);
 }
 
-function removeElement(array, object){
-    for(var i = array.length - 1; i >= 0; i--) {
-        if(array[i] === object) {
-            array.splice(i, 1);
-        }
+function removeElement(array, object) {
+  for (var i = array.length - 1; i >= 0; i--) {
+    if (array[i] === object) {
+      array.splice(i, 1);
     }
+  }
 }
 
 server.listen(8081, function () {

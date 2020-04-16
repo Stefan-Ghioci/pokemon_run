@@ -2,6 +2,7 @@ var state = {
   scenes: [],
   characters: [],
   selectedCharacter: -1,
+  gameStarted: false
 };
 
 var constants = {
