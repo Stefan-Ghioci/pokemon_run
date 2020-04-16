@@ -10,6 +10,8 @@ var bootState = new Phaser.Class({
     loadCharacterSpritesheet(this, 'pikachu');
 
     this.load.image('world_background', '../assets/images/world_background.png');
+    this.load.image('menu_background', '../assets/images/menu_background.png');
+
     this.load.bitmapFont('pokemon_font', 'assets/fonts/pokemon.png', 'assets/fonts/pokemon.fnt');
   },
 
