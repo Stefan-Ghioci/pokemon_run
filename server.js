@@ -6,7 +6,7 @@ var io = require('socket.io').listen(server);
 var players = {};
 var eeveeLFG = [];
 var pikachuLFG = [];
-var games = {};
+var games = [];
 
 app.use(express.static(__dirname + '/public'));
 
@@ -16,7 +16,7 @@ app.get('/', function (_req, res) {
 
 io.on('connection', function (socket) {
   console.log('a user connected');
-  players[socket.id] = { playerID: socket.id, pos: { x: 0, y: 0 } };
+  players[socket.id] = { playerID: socket.id };
 
   socket.on('lfg', function (selectedCharacter) {
     if (selectedCharacter === 0) {
@@ -32,11 +32,25 @@ io.on('connection', function (socket) {
       var eeveeID = eeveeLFG.shift();
       var pikachuID = pikachuLFG.shift();
 
-      var gameID = eeveeID + pikachuID;
-      games[gameID] = { eeveeID, pikachuID, pikachuScore: 0, eeveeScore: 0 };
+      games.push({ eeveeID, pikachuID, pikachuScore: 0, eeveeScore: 0 });
       io.to(eeveeID).emit('game found', null);
       io.to(pikachuID).emit('game found', null);
     }
+  });
+
+  socket.on('player moved', function (cursors) {
+    io.to(socket.id).emit('player moved', cursors);
+    games.some((game) => {
+      if (game.pikachuID === socket.id) {
+        io.to(game.eeveeID).emit('opponent moved', cursors);
+        return true;
+      }
+      if (game.eeveeID === socket.id) {
+        io.to(game.pikachuID).emit('opponent moved', cursors);
+        return true;
+      }
+      return false;
+    });
   });
 
   socket.on('disconnect', function () {

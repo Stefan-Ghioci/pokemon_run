@@ -21,7 +21,7 @@ var gamePlayState = new Phaser.Class({
         this.opponent = this.physics.add
           .sprite(60, state.selectedCharacter !== 0 ? 240 : 300, this.opponentCharacterString + '_idle')
           .setScale(2)
-          .setSize(24, 24)
+          .setSize(24, 12)
           .setOffset(12, 24)
           .setCollideWorldBounds(true);
 
@@ -30,6 +30,62 @@ var gamePlayState = new Phaser.Class({
 
         this.physics.add.collider(this.opponent, this.player);
         state.gameStarted = true;
+      }.bind(this)
+    );
+
+    this.socket.on(
+      'player moved',
+      function (cursors) {
+        this.player.setVelocity(0);
+
+        if (cursors.left) {
+          this.player.setVelocityX(-250);
+          this.player.flipX = true;
+          this.player.anims.play(this.selectedCharacterString + '_run', true);
+        } else if (cursors.right) {
+          this.player.setVelocityX(250);
+          this.player.flipX = false;
+          this.player.anims.play(this.selectedCharacterString + '_run', true);
+        }
+
+        if (cursors.up) {
+          this.player.setVelocityY(-150);
+          this.player.anims.play(this.selectedCharacterString + '_run', true);
+        } else if (cursors.down) {
+          this.player.setVelocityY(150);
+          this.player.anims.play(this.selectedCharacterString + '_run', true);
+        } else if (!cursors.left && !cursors.right) {
+          this.player.anims.play(this.selectedCharacterString + '_idle', true);
+          this.player.anims.pause();
+        }
+      }.bind(this)
+    );
+
+    this.socket.on(
+      'opponent moved',
+      function (cursors) {
+        this.opponent.setVelocity(0);
+
+        if (cursors.left) {
+          this.opponent.setVelocityX(-250);
+          this.opponent.flipX = true;
+          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
+        } else if (cursors.right) {
+          this.opponent.setVelocityX(250);
+          this.opponent.flipX = false;
+          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
+        }
+
+        if (cursors.up) {
+          this.opponent.setVelocityY(-150);
+          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
+        } else if (cursors.down) {
+          this.opponent.setVelocityY(150);
+          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
+        } else if (!cursors.left && !cursors.right) {
+          this.opponent.anims.play(this.opponentCharacterString + '_idle', true);
+          this.opponent.anims.pause();
+        }
       }.bind(this)
     );
 
@@ -49,7 +105,7 @@ var gamePlayState = new Phaser.Class({
     this.player = this.physics.add
       .sprite(60, state.selectedCharacter === 0 ? 240 : 300, this.selectedCharacterString + '_idle')
       .setScale(2)
-      .setSize(24, 24)
+      .setSize(24, 12)
       .setOffset(12, 24)
       .setCollideWorldBounds(true);
 
@@ -65,38 +121,21 @@ var gamePlayState = new Phaser.Class({
   },
 
   update: function () {
-    if(state.gameStarted)
-    {
+    if (state.gameStarted) {
       this.opponent.depth = this.opponent.y + this.opponent.height / 2;
-    }
-
-    this.player.setVelocity(0);
-
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-250);
-      this.player.flipX = true;
-      this.player.anims.play(this.selectedCharacterString + '_run', true);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(250);
-      this.player.flipX = false;
-      this.player.anims.play(this.selectedCharacterString + '_run', true);
-    }
-
-    if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-150);
-      this.player.anims.play(this.selectedCharacterString + '_run', true);
-    } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(150);
-      this.player.anims.play(this.selectedCharacterString + '_run', true);
-    } else if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
-      this.player.anims.play(this.selectedCharacterString + '_idle', true);
-      this.player.anims.pause();
     }
 
     this.player.depth = this.player.y + this.player.height / 2;
 
     this.topBackground.tilePositionX = this.cam.scrollX * 0.75;
     this.bottomBackground.tilePositionX = this.cam.scrollX * 1.05;
+
+    this.socket.emit('player moved', {
+      up: this.cursors.up.isDown,
+      down: this.cursors.down.isDown,
+      left: this.cursors.left.isDown,
+      right: this.cursors.right.isDown,
+    });
   },
 });
 
