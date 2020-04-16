@@ -20,20 +20,6 @@ var mainMenuState = new Phaser.Class({
     this.pikachu.alpha = 0.66;
     this.eevee.alpha = 0.66;
 
-    this.anims.create({
-      key: 'pikachu_idle',
-      frames: this.anims.generateFrameNumbers('pikachu_idle'),
-      frameRate: 6,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'eevee_idle',
-      frames: this.anims.generateFrameNumbers('eevee_idle'),
-      frameRate: 6,
-      repeat: -1,
-    });
-
     this.pikachu.anims.load('pikachu_idle');
     this.eevee.anims.load('eevee_idle');
 
