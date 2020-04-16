@@ -1,0 +1,28 @@
+{
+  "name": "pokemon_run",
+  "version": "1.0.0",
+  "description": "Multiplayer browser game featuring Pokemon characters, made using Phaser 3",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stefan-Ghioci/pokemon_run.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Stefan-Ghioci/pokemon_run/issues"
+  },
+  "homepage": "https://github.com/Stefan-Ghioci/pokemon_run#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

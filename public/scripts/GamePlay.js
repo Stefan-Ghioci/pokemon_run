@@ -10,6 +10,9 @@ var gamePlayState = new Phaser.Class({
 
   create: function () {
     console.log('GamePlay');
+    this.socket = io();
+    this.socket.emit('lfg', state.selectedCharacter);
+
     this.topBackground = this.add.tileSprite(0, 0, 640, 480, 'world_top_background');
     this.topBackground.setOrigin(0);
     this.topBackground.setScrollFactor(0);
@@ -24,8 +27,7 @@ var gamePlayState = new Phaser.Class({
 
     this.player.anims.play(this.selectedCharacterString + '_idle');
     this.player.anims.pause();
-    
-    
+
     this.cursors = this.input.keyboard.createCursorKeys();
 
     this.myCam = this.cameras.main;
@@ -50,15 +52,15 @@ var gamePlayState = new Phaser.Class({
     if (this.cursors.up.isDown && this.player.y > 210) {
       this.player.setVelocityY(-150);
       this.player.anims.play(this.selectedCharacterString + '_run', true);
-    } else if (this.cursors.down.isDown &&this.player.y < 360) {
+    } else if (this.cursors.down.isDown && this.player.y < 360) {
       this.player.setVelocityY(150);
       this.player.anims.play(this.selectedCharacterString + '_run', true);
-    } else if(!this.cursors.left.isDown && !this.cursors.right.isDown) {
+    } else if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
       this.player.anims.play(this.selectedCharacterString + '_idle', true);
       this.player.anims.pause();
     }
     this.topBackground.tilePositionX = this.myCam.scrollX * 0.75;
-    this.bottomBackground.tilePositionX = this.myCam.scrollX * 1.25;
+    this.bottomBackground.tilePositionX = this.myCam.scrollX * 1.05;
   },
 });
 

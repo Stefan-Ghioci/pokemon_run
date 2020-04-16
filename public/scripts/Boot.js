@@ -18,7 +18,7 @@ var bootState = new Phaser.Class({
 
   create: function () {
     console.log('Preload');
-
+    
     
     createCharacterAnims(this, 'eevee');
     createCharacterAnims(this, 'pikachu');
