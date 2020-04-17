@@ -1,7 +1,7 @@
 var state = {
   scenes: [],
   characters: [],
-  selectedCharacter: -1,
+  playerIndex: -1,
   gameStarted: false
 };
 

@@ -10,86 +10,8 @@ var gamePlayState = new Phaser.Class({
 
   create: function () {
     console.log('GamePlay');
-    this.socket = io();
-    this.socket.emit('lfg', state.selectedCharacter);
 
-    this.socket.on(
-      'game found',
-      function () {
-        this.opponentCharacterString = state.selectedCharacter !== 0 ? 'pikachu' : 'eevee';
-
-        this.opponent = this.physics.add
-          .sprite(60, state.selectedCharacter !== 0 ? 240 : 300, this.opponentCharacterString + '_idle')
-          .setScale(2)
-          .setSize(24, 12)
-          .setOffset(12, 24)
-          .setCollideWorldBounds(true);
-
-        this.opponent.anims.play(this.opponentCharacterString + '_idle');
-        this.opponent.anims.pause();
-
-        this.physics.add.collider(this.opponent, this.player);
-        state.gameStarted = true;
-      }.bind(this)
-    );
-
-    this.socket.on(
-      'player moved',
-      function (cursors) {
-        this.player.setVelocity(0);
-
-        if (cursors.left) {
-          this.player.setVelocityX(-250);
-          this.player.flipX = true;
-          this.player.anims.play(this.selectedCharacterString + '_run', true);
-        } else if (cursors.right) {
-          this.player.setVelocityX(250);
-          this.player.flipX = false;
-          this.player.anims.play(this.selectedCharacterString + '_run', true);
-        }
-
-        if (cursors.up) {
-          this.player.setVelocityY(-150);
-          this.player.anims.play(this.selectedCharacterString + '_run', true);
-        } else if (cursors.down) {
-          this.player.setVelocityY(150);
-          this.player.anims.play(this.selectedCharacterString + '_run', true);
-        } else if (!cursors.left && !cursors.right) {
-          this.player.anims.play(this.selectedCharacterString + '_idle', true);
-          this.player.anims.pause();
-        }
-      }.bind(this)
-    );
-
-    this.socket.on(
-      'opponent moved',
-      function (cursors) {
-        this.opponent.setVelocity(0);
-
-        if (cursors.left) {
-          this.opponent.setVelocityX(-250);
-          this.opponent.flipX = true;
-          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
-        } else if (cursors.right) {
-          this.opponent.setVelocityX(250);
-          this.opponent.flipX = false;
-          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
-        }
-
-        if (cursors.up) {
-          this.opponent.setVelocityY(-150);
-          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
-        } else if (cursors.down) {
-          this.opponent.setVelocityY(150);
-          this.opponent.anims.play(this.opponentCharacterString + '_run', true);
-        } else if (!cursors.left && !cursors.right) {
-          this.opponent.anims.play(this.opponentCharacterString + '_idle', true);
-          this.opponent.anims.pause();
-        }
-      }.bind(this)
-    );
-
-    this.physics.world.setBounds(0, 216, 480, 200);
+    this.physics.world.setBounds(0, 216, 480, 180);
     this.physics.world.setBoundsCollision(true, false, true, true);
 
     this.topBackground = this.add.tileSprite(0, 0, 640, 480, 'world_top_background');
@@ -100,43 +22,93 @@ var gamePlayState = new Phaser.Class({
     this.bottomBackground.setOrigin(0);
     this.bottomBackground.setScrollFactor(0);
 
-    this.selectedCharacterString = state.selectedCharacter === 0 ? 'pikachu' : 'eevee';
-
-    this.player = this.physics.add
-      .sprite(60, state.selectedCharacter === 0 ? 240 : 300, this.selectedCharacterString + '_idle')
-      .setScale(2)
-      .setSize(24, 12)
-      .setOffset(12, 24)
-      .setCollideWorldBounds(true);
-
-    this.player.anims.play(this.selectedCharacterString + '_idle');
-    this.player.anims.pause();
+    this.player = spawnCharacter(this, state.playerIndex);
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
     this.cam = this.cameras.main;
     this.cam.setBounds(0, 0, 6400, 480);
-
     this.cam.startFollow(this.player);
+
+    // CONNECTIVITY
+
+    this.socket = io();
+    this.socket.emit('lfg', state.playerIndex);
+
+    this.socket.on('game found', () => {
+      this.opponent = spawnCharacter(this, 1 - state.playerIndex);
+      this.physics.add.collider(this.opponent, this.player);
+      state.gameStarted = true;
+    });
+
+    this.socket.on('player moved', (cursors) => moveCharacter(this, this.player, state.playerIndex, cursors));
+    this.socket.on('opponent moved', (cursors) =>
+      moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors)
+    );
   },
 
   update: function () {
     if (state.gameStarted) {
+      this.player.depth = this.player.y + this.player.height / 2;
       this.opponent.depth = this.opponent.y + this.opponent.height / 2;
+
+      this.topBackground.tilePositionX = this.cam.scrollX * 0.75;
+      this.bottomBackground.tilePositionX = this.cam.scrollX * 1.05;
+
+      this.socket.emit('player moved', {
+        up: this.cursors.up.isDown,
+        down: this.cursors.down.isDown,
+        left: this.cursors.left.isDown,
+        right: this.cursors.right.isDown,
+      });
+    } else {
     }
-
-    this.player.depth = this.player.y + this.player.height / 2;
-
-    this.topBackground.tilePositionX = this.cam.scrollX * 0.75;
-    this.bottomBackground.tilePositionX = this.cam.scrollX * 1.05;
-
-    this.socket.emit('player moved', {
-      up: this.cursors.up.isDown,
-      down: this.cursors.down.isDown,
-      left: this.cursors.left.isDown,
-      right: this.cursors.right.isDown,
-    });
   },
 });
+
+const moveCharacter = (scene, character, characterIndex, cursors) => {
+  var characterString = characterIndex === 0 ? 'pikachu' : 'eevee';
+
+  if (cursors.left) {
+    character.setVelocityX(-250);
+    character.flipX = true;
+    character.anims.play(characterString + '_run', true);
+  } else if (cursors.right) {
+    character.setVelocityX(250);
+    character.flipX = false;
+    character.anims.play(characterString + '_run', true);
+  }
+
+  if (cursors.up) {
+    character.setVelocityY(-150);
+    character.anims.play(characterString + '_run', true);
+  } else if (cursors.down) {
+    character.setVelocityY(150);
+    character.anims.play(characterString + '_run', true);
+  } else if (!cursors.left && !cursors.right) {
+    character.anims.play(characterString + '_idle', true);
+    character.anims.pause();
+    character.setVelocity(0);
+  }
+};
+
+const spawnCharacter = (scene, characterIndex) => {
+  var characterString = characterIndex === 0 ? 'pikachu' : 'eevee';
+
+  var startPosX = 60;
+  var startPosY = characterIndex === 0 ? 240 : 300;
+
+  var character = scene.physics.add
+    .sprite(startPosX, startPosY, characterString + '_idle')
+    .setScale(2)
+    .setSize(24, 12)
+    .setOffset(12, 24)
+    .setCollideWorldBounds(true);
+
+  character.anims.play(characterString + '_idle');
+  character.anims.pause();
+
+  return character;
+};
 
 state.scenes.push(gamePlayState);

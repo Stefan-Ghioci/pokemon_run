@@ -37,7 +37,7 @@ var mainMenuState = new Phaser.Class({
     });
     this.input.on('gameobjectout', function (_pointer, object) {
       if (characters.includes(object)) {
-        if (state.selectedCharacter === -1 || characters[state.selectedCharacter] !== object) freeze(object);
+        if (state.playerIndex === -1 || characters[state.playerIndex] !== object) freeze(object);
       }
     });
 
@@ -54,7 +54,7 @@ var mainMenuState = new Phaser.Class({
   },
 
   update: function () {
-    if (state.selectedCharacter !== -1) {
+    if (state.playerIndex !== -1) {
       this.go.alpha = 1;
       this.go.setInteractive({ useHandCursor: true });
     }
@@ -75,7 +75,7 @@ function freeze(object) {
 
 function bindCharacterSelectHandler(character, index) {
   character.on('pointerdown', function () {
-    state.selectedCharacter = index;
+    state.playerIndex = index;
     freeze(characters[1 - index]);
     characters[1 - index].setInteractive({ useHandCursor: true });
     character.removeInteractive();
