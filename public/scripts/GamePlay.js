@@ -11,7 +11,7 @@ var gamePlayState = new Phaser.Class({
   create: function () {
     console.log('GamePlay');
 
-    this.physics.world.setBounds(0, 216, 480, 180);
+    this.physics.world.setBounds(0, 220, 480, 160);
     this.physics.world.setBoundsCollision(true, false, true, true);
 
     this.topBackground = this.add.tileSprite(0, 0, 640, 480, 'world_top_background');
@@ -30,6 +30,31 @@ var gamePlayState = new Phaser.Class({
     this.cam.setBounds(0, 0, 6400, 480);
     this.cam.startFollow(this.player);
 
+    this.waiting = this.add.bitmapText(
+      320,
+      30,
+      'pokemon_font',
+      'Waiting for ' + (state.playerIndex === 0 ? 'Eevee' : 'Pikachu') + '...',
+      40
+    );
+    this.waiting.setOrigin(0.5);
+
+    this.flashWait1 = this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        this.waiting.alpha = 1;
+      },
+      loop: true,
+    });
+
+    this.flashWait2 = this.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        this.waiting.alpha = 0;
+      },
+      loop: true,
+    });
+
     // CONNECTIVITY
 
     this.socket = io();
@@ -38,13 +63,16 @@ var gamePlayState = new Phaser.Class({
     this.socket.on('game found', () => {
       this.opponent = spawnCharacter(this, 1 - state.playerIndex);
       this.physics.add.collider(this.opponent, this.player);
+    
       state.gameStarted = true;
+    
+      this.flashWait1.remove();
+      this.flashWait2.remove();
+      this.waiting.destroy();
     });
 
     this.socket.on('player moved', (cursors) => moveCharacter(this, this.player, state.playerIndex, cursors));
-    this.socket.on('opponent moved', (cursors) =>
-      moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors)
-    );
+    this.socket.on('opponent moved', (cursors) => moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors));
   },
 
   update: function () {
@@ -106,7 +134,6 @@ const spawnCharacter = (scene, characterIndex) => {
     .setCollideWorldBounds(true);
 
   character.anims.play(characterString + '_idle');
-  character.anims.pause();
 
   return character;
 };

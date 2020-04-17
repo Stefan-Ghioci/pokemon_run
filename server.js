@@ -39,13 +39,14 @@ io.on('connection', function (socket) {
   });
 
   socket.on('player moved', function (cursors) {
-    io.to(socket.id).emit('player moved', cursors);
     games.some((game) => {
       if (game.pikachuID === socket.id) {
+        io.to(socket.id).emit('player moved', cursors);
         io.to(game.eeveeID).emit('opponent moved', cursors);
         return true;
       }
       if (game.eeveeID === socket.id) {
+        io.to(socket.id).emit('player moved', cursors);
         io.to(game.pikachuID).emit('opponent moved', cursors);
         return true;
       }
