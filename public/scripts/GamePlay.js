@@ -63,9 +63,9 @@ var gamePlayState = new Phaser.Class({
     this.socket.on('game found', () => {
       this.opponent = spawnCharacter(this, 1 - state.playerIndex);
       this.physics.add.collider(this.opponent, this.player);
-    
+
       state.gameStarted = true;
-    
+
       this.flashWait1.remove();
       this.flashWait2.remove();
       this.waiting.destroy();
@@ -97,26 +97,31 @@ var gamePlayState = new Phaser.Class({
 const moveCharacter = (scene, character, characterIndex, cursors) => {
   var characterString = characterIndex === 0 ? 'pikachu' : 'eevee';
 
+  character.anims.play(characterString + '_run', true);
+
+  var moving = 2;
+
   if (cursors.left) {
     character.setVelocityX(-250);
     character.flipX = true;
-    character.anims.play(characterString + '_run', true);
   } else if (cursors.right) {
     character.setVelocityX(250);
     character.flipX = false;
-    character.anims.play(characterString + '_run', true);
+  } else {
+    character.setVelocityX(0);
+    moving--;
   }
-
   if (cursors.up) {
     character.setVelocityY(-150);
-    character.anims.play(characterString + '_run', true);
   } else if (cursors.down) {
     character.setVelocityY(150);
-    character.anims.play(characterString + '_run', true);
-  } else if (!cursors.left && !cursors.right) {
+  } else {
+    character.setVelocityY(0);
+    moving--;
+  }
+  if (!moving) {
     character.anims.play(characterString + '_idle', true);
     character.anims.pause();
-    character.setVelocity(0);
   }
 };
 
