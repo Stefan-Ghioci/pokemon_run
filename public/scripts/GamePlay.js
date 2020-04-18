@@ -74,10 +74,11 @@ var gamePlayState = new Phaser.Class({
     this.socket.on('player moved', (cursors) => moveCharacter(this, this.player, state.playerIndex, cursors));
     this.socket.on('opponent moved', (cursors) => moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors));
     this.socket.on('autowin', () => {
+      state.gamePhase = 'waiting';
+      
       this.opponent.destroy();
       this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
 
-      state.gamePhase = 'waiting';
 
       this.add
         .bitmapText(
