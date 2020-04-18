@@ -64,7 +64,7 @@ var gamePlayState = new Phaser.Class({
       this.opponent = spawnCharacter(this, 1 - state.playerIndex);
       this.physics.add.collider(this.opponent, this.player);
 
-      state.gameStarted = true;
+      state.gamePhase = 'playing';
 
       this.flashWait1.remove();
       this.flashWait2.remove();
@@ -73,23 +73,49 @@ var gamePlayState = new Phaser.Class({
 
     this.socket.on('player moved', (cursors) => moveCharacter(this, this.player, state.playerIndex, cursors));
     this.socket.on('opponent moved', (cursors) => moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors));
-  },
+    this.socket.on('autowin', () => {
+      this.opponent.destroy();
+      this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
+
+      state.gamePhase = 'waiting';
+
+      this.add
+        .bitmapText(
+          320,
+          30,
+          'pokemon_font',
+          '' + (state.playerIndex === 0 ? 'Eevee' : 'Pikachu') + ' resigned. You win!',
+          40
+        )
+        .setOrigin(0.5);
+
+      this.time.addEvent({
+        delay: 7000,
+        callback: () => {
+          this.socket.emit('disconnect', null);
+          this.scene.start('MainMenu');
+        },
+        loop: true,
+      });
+    });
+  }, 
 
   update: function () {
-    if (state.gameStarted) {
-      this.player.depth = this.player.y + this.player.height / 2;
-      this.opponent.depth = this.opponent.y + this.opponent.height / 2;
+    switch (state.gamePhase) {
+      case 'playing':
+        this.player.depth = this.player.y + this.player.height / 2;
+        this.opponent.depth = this.opponent.y + this.opponent.height / 2;
 
-      this.topBackground.tilePositionX = this.cam.scrollX * 0.75;
-      this.bottomBackground.tilePositionX = this.cam.scrollX * 1.05;
+        this.topBackground.tilePositionX = this.cam.scrollX * 0.75;
+        this.bottomBackground.tilePositionX = this.cam.scrollX * 1.05;
 
-      this.socket.emit('player moved', {
-        up: this.cursors.up.isDown,
-        down: this.cursors.down.isDown,
-        left: this.cursors.left.isDown,
-        right: this.cursors.right.isDown,
-      });
-    } else {
+        this.socket.emit('player moved', {
+          up: this.cursors.up.isDown,
+          down: this.cursors.down.isDown,
+          left: this.cursors.left.isDown,
+          right: this.cursors.right.isDown,
+        });
+        break;
     }
   },
 });

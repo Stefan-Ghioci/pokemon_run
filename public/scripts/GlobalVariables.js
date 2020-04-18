@@ -2,7 +2,7 @@ var state = {
   scenes: [],
   characters: [],
   playerIndex: -1,
-  gameStarted: false
+  gamePhase: "waiting"
 };
 
 var constants = {
