@@ -31,8 +31,11 @@ io.on('connection', function (socket) {
       var pikachuID = pikachuLFG.shift();
 
       games.push({ eeveeID, pikachuID, pikachuScore: 0, eeveeScore: 0 });
-      io.to(eeveeID).emit('game found', null);
-      io.to(pikachuID).emit('game found', null);
+      
+      var seed = Math.random() * 1000;
+
+      io.to(eeveeID).emit('game found', seed);
+      io.to(pikachuID).emit('game found', seed);
     }
   });
 

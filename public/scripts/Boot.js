@@ -13,6 +13,9 @@ var bootState = new Phaser.Class({
     this.load.image('world_bottom_background', '../assets/images/world_bottom_background.png');
     this.load.image('menu_background', '../assets/images/menu_background.png');
 
+    this.load.image('bush0', '../assets/images/bush0.png');
+    this.load.image('bush1', '../assets/images/bush1.png');
+
     this.load.bitmapFont('pokemon_font', 'assets/fonts/pokemon.png', 'assets/fonts/pokemon.fnt');
   },
 

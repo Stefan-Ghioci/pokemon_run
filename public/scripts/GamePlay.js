@@ -60,7 +60,9 @@ var gamePlayState = new Phaser.Class({
     this.socket = io();
     this.socket.emit('lfg', state.playerIndex);
 
-    this.socket.on('game found', () => {
+    this.socket.on('game found', (seed) => {
+      this.bushes = drawBushes(this, seed);
+
       this.opponent = spawnCharacter(this, 1 - state.playerIndex);
       this.physics.add.collider(this.opponent, this.player);
 
@@ -68,17 +70,18 @@ var gamePlayState = new Phaser.Class({
 
       this.flashWait1.remove();
       this.flashWait2.remove();
+
       this.waiting.destroy();
     });
 
     this.socket.on('player moved', (cursors) => moveCharacter(this, this.player, state.playerIndex, cursors));
-    this.socket.on('opponent moved', (cursors) => moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors));
-    this.socket.on('autowin', () => {
-      state.gamePhase = 'waiting';
-      
-      this.opponent.destroy();
-      this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
 
+    this.socket.on('opponent moved', (cursors) => moveCharacter(this, this.opponent, 1 - state.playerIndex, cursors));
+
+    this.socket.on('autowin', () => {
+      state.gamePhase = 'winning';
+
+      this.opponent.destroy();
 
       this.add
         .bitmapText(
@@ -91,15 +94,16 @@ var gamePlayState = new Phaser.Class({
         .setOrigin(0.5);
 
       this.time.addEvent({
-        delay: 7000,
+        delay: 5000,
         callback: () => {
           this.socket.emit('disconnect', null);
           this.scene.start('MainMenu');
+          state.gamePhase = 'waiting';
         },
         loop: true,
       });
     });
-  }, 
+  },
 
   update: function () {
     switch (state.gamePhase) {
@@ -116,6 +120,9 @@ var gamePlayState = new Phaser.Class({
           left: this.cursors.left.isDown,
           right: this.cursors.right.isDown,
         });
+        break;
+      case 'winning':
+        this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
         break;
     }
   },
@@ -168,6 +175,32 @@ const spawnCharacter = (scene, characterIndex) => {
   character.anims.play(characterString + '_idle');
 
   return character;
+};
+
+const drawBushes = (scene, seed) => {
+  console.log(seed);
+
+  var bushes = scene.physics.add.staticGroup();
+  var randoms = [];
+
+  for (var i = 0; i < 2 * constants.bushesCount; i++) {
+    var x = Math.sin(seed++) * 10000;
+    randoms.push(x - Math.floor(x));
+  }
+
+  for (var i = 0; i < 2 * constants.bushesCount; i += 2) {
+    var x = randoms[i] * 6400;
+    var y = 220 + randoms[i + 1] * 160;
+
+    const number = Math.floor(Math.random() * 2);
+    console.log(number);
+    var bush = scene.add.image(x, y, 'bush' + number).setScale(2);
+    bush.depth = bush.y + bush.height / 2;
+
+    bushes.add(bush);
+  }
+
+  return bushes;
 };
 
 state.scenes.push(gamePlayState);
