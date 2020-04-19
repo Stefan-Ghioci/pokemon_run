@@ -62,9 +62,14 @@ var gamePlayState = new Phaser.Class({
 
     this.socket.on('game found', (seed) => {
       this.bushes = drawBushes(this, seed);
-
       this.opponent = spawnCharacter(this, 1 - state.playerIndex);
+
+      state.slowDown[this.opponent] = 0;
+      state.slowDown[this.player] = 0;
+
       this.physics.add.collider(this.opponent, this.player);
+      this.physics.add.overlap(this.opponent, this.bushes, slowDownCharacter, null, this);
+      this.physics.add.overlap(this.player, this.bushes, slowDownCharacter, null, this);
 
       state.gamePhase = 'playing';
 
@@ -85,7 +90,7 @@ var gamePlayState = new Phaser.Class({
 
       this.add
         .bitmapText(
-          320,
+          this.cam.scrollX + 320,
           30,
           'pokemon_font',
           '' + (state.playerIndex === 0 ? 'Eevee' : 'Pikachu') + ' resigned. You win!',
@@ -124,9 +129,16 @@ var gamePlayState = new Phaser.Class({
       case 'winning':
         this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
         break;
+      case 'losing':
+        this.opponent.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
+        break;
     }
   },
 });
+
+const slowDownCharacter = (character, _bush) => {
+  state.slowDown[character] = 1;
+};
 
 const moveCharacter = (scene, character, characterIndex, cursors) => {
   var characterString = characterIndex === 0 ? 'pikachu' : 'eevee';
@@ -135,20 +147,25 @@ const moveCharacter = (scene, character, characterIndex, cursors) => {
 
   var moving = 2;
 
+  var xVelocity = 250 - state.slowDown[character] * 150;
+  var yVelocity = 150 - state.slowDown[character] * 100;
+
+  state.slowDown[character] = 0;
+
   if (cursors.left) {
-    character.setVelocityX(-250);
+    character.setVelocityX(-xVelocity);
     character.flipX = true;
   } else if (cursors.right) {
-    character.setVelocityX(250);
+    character.setVelocityX(xVelocity);
     character.flipX = false;
   } else {
     character.setVelocityX(0);
     moving--;
   }
   if (cursors.up) {
-    character.setVelocityY(-150);
+    character.setVelocityY(-yVelocity);
   } else if (cursors.down) {
-    character.setVelocityY(150);
+    character.setVelocityY(yVelocity);
   } else {
     character.setVelocityY(0);
     moving--;
@@ -178,8 +195,6 @@ const spawnCharacter = (scene, characterIndex) => {
 };
 
 const drawBushes = (scene, seed) => {
-  console.log(seed);
-
   var bushes = scene.physics.add.staticGroup();
   var randoms = [];
 
@@ -193,11 +208,11 @@ const drawBushes = (scene, seed) => {
     var y = 220 + randoms[i + 1] * 160;
 
     const number = Math.floor(Math.random() * 2);
-    console.log(number);
     var bush = scene.add.image(x, y, 'bush' + number).setScale(2);
     bush.depth = bush.y + bush.height / 2;
-
     bushes.add(bush);
+
+    // bushes.create(x, y, 'bush' + number).setScale(2);
   }
 
   return bushes;
