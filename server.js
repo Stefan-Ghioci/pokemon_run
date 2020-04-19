@@ -31,12 +31,21 @@ io.on('connection', function (socket) {
       var pikachuID = pikachuLFG.shift();
 
       games.push({ eeveeID, pikachuID, pikachuScore: 0, eeveeScore: 0 });
-      
+
       var seed = Math.random() * 1000;
 
       io.to(eeveeID).emit('game found', seed);
       io.to(pikachuID).emit('game found', seed);
     }
+  });
+
+  socket.on('finish line', function () {
+    var newScore = changeScore(socket.id);
+    console.log("new score" + newScore)
+    var opponentID = getOpponentID(socket.id);
+
+    io.to(socket.id).emit('round won', newScore);
+    io.to(opponentID).emit('round lost', newScore);
   });
 
   socket.on('player moved', function (cursors) {
@@ -56,20 +65,37 @@ io.on('connection', function (socket) {
   });
 });
 
-function clearLFG(playerID) {
+const clearLFG = (playerID) => {
   removeElement(eeveeLFG, playerID);
   removeElement(pikachuLFG, playerID);
-}
+};
 
-function removeElement(array, object) {
+const removeElement = (array, object) => {
   for (var i = array.length - 1; i >= 0; i--) {
     if (array[i] === object) {
       array.splice(i, 1);
     }
   }
-}
+};
 
-function getOpponentID(playerID) {
+const changeScore = (playerID) => {
+  var newScore = null;
+
+  games.some((game) => {
+    if (game.pikachuID === playerID) {
+      game.pikachuScore += 1;
+      newScore = { pikachuScore: game.pikachuScore, eeveeScore: game.eeveeScore };
+    }
+    if (game.eeveeID === playerID) {
+      game.eeveeScore += 1;
+      newScore = { pikachuScore: game.pikachuScore, eeveeScore: game.eeveeScore };
+    }
+  });
+
+  return newScore;
+};
+
+const getOpponentID = (playerID) => {
   var opponentID = null;
   games.some((game) => {
     if (game.pikachuID === playerID) {
@@ -80,7 +106,7 @@ function getOpponentID(playerID) {
     }
   });
   return opponentID;
-}
+};
 
 server.listen(8081, function () {
   console.log(`Listening on ${server.address().port}`);

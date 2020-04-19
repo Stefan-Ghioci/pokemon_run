@@ -9,6 +9,8 @@ var bootState = new Phaser.Class({
     loadCharacterSpritesheet(this, 'eevee');
     loadCharacterSpritesheet(this, 'pikachu');
 
+    this.load.spritesheet('flag', '../assets/spritesheets/flag.png', constants.frameSize);
+
     this.load.image('world_top_background', '../assets/images/world_top_background.png');
     this.load.image('world_bottom_background', '../assets/images/world_bottom_background.png');
     this.load.image('menu_background', '../assets/images/menu_background.png');
@@ -25,6 +27,13 @@ var bootState = new Phaser.Class({
     
     createCharacterAnims(this, 'eevee');
     createCharacterAnims(this, 'pikachu');
+
+    this.anims.create({
+      key: 'flag',
+      frames: this.anims.generateFrameNumbers('flag'),
+      frameRate: 6,
+      repeat: -1,
+    });
 
     game.scene.start('MainMenu');
   },
