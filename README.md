@@ -17,7 +17,7 @@ Browser-based running sidescroller multiplayer game featuring Pokemon characters
 * Animation freezes or not responding
 * Scoreboard glitches
 
-## Instalation
+## Installation
 
 * Download or clone GitHub repo
 * Run ```npm install``` through command-line in the main directory
