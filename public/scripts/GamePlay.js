@@ -125,6 +125,56 @@ var gamePlayState = new Phaser.Class({
       });
     });
 
+    this.socket.on('game won', () => {
+      state.gamePhase = 'winning';
+
+
+      this.add
+        .bitmapText(
+          this.cam.scrollX + 320,
+          30,
+          'pokemon_font',
+          '' + (state.playerIndex === 0 ? 'Pikachu' : 'Eevee') + ' wins!',
+          40
+        )
+        .setOrigin(0.5);
+
+      this.time.addEvent({
+        delay: 5000,
+        callback: () => {
+          state.gamePhase = 'waiting';
+          this.socket.emit('disconnect', null);
+          this.scene.start('MainMenu');
+        },
+        loop: false,
+      });
+    });
+
+    this.socket.on('game lost', () => {
+      state.gamePhase = 'losing';
+
+
+      this.add
+        .bitmapText(
+          this.cam.scrollX + 320,
+          30,
+          'pokemon_font',
+          '' + (state.playerIndex === 0 ? 'Eevee' : 'Pikachu') + ' wins!',
+          40
+        )
+        .setOrigin(0.5);
+
+      this.time.addEvent({
+        delay: 5000,
+        callback: () => {
+          state.gamePhase = 'waiting';
+          this.socket.emit('disconnect', null);
+          this.scene.start('MainMenu');
+        },
+        loop: false,
+      });
+    });
+
     this.socket.on('round won', (score) => {
       state.gamePhase = 'winning';
       roundFinished(this, score);
@@ -157,11 +207,15 @@ var gamePlayState = new Phaser.Class({
       case 'winning':
         this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
         this.player.setVelocity(0);
+
+        this.opponent.anims.play((state.playerIndex === 0 ? 'eevee' : 'pikachu') + '_run', true);
         this.opponent.setVelocity(0);
         break;
       case 'losing':
-        this.opponent.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_cheer', true);
+        this.opponent.anims.play((state.playerIndex === 0 ? 'eevee' : 'pikachu') + '_cheer', true);
         this.opponent.setVelocity(0);
+        
+        this.player.anims.play((state.playerIndex === 0 ? 'pikachu' : 'eevee') + '_run', true);
         this.player.setVelocity(0);
         break;
     }

@@ -41,11 +41,15 @@ io.on('connection', function (socket) {
 
   socket.on('finish line', function () {
     var newScore = changeScore(socket.id);
-    console.log("new score" + newScore)
     var opponentID = getOpponentID(socket.id);
 
-    io.to(socket.id).emit('round won', newScore);
-    io.to(opponentID).emit('round lost', newScore);
+    if (newScore.pikachuScore === 3 || newScore.eeveeScore === 3) {
+        io.to(socket.id).emit('game won', null);
+        io.to(opponentID).emit('game lost', null);
+    } else {
+      io.to(socket.id).emit('round won', newScore);
+      io.to(opponentID).emit('round lost', newScore);
+    }
   });
 
   socket.on('player moved', function (cursors) {
